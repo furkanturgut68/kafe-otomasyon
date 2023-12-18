@@ -1,27 +1,27 @@
 <template>
-  <div class="grid w-screen h-full">
-    <div class="bg-primary w-screen h-4rem flex align-items-center gap-3">
-      <PvButton label="Kaydet" severity="success" icon="pi pi-check" class="h-full" />
-      <PvButton label="Kaydetmeden Çık" severity="danger" icon="pi pi-times" class="h-full" />
+  <div class="grid col-12 ">
+    <div class="col-12 bg-primary w-screen h-4rem flex justify-content-between xl:gap-4 xl:justify-content-start ">
+      <PvButton label="Kaydet Çık" severity="success" icon="pi pi-check" class="col-5 xl:col-1" />
+      <PvButton label="Kaydetmeden Çık" severity="danger" icon="pi pi-times" class="col-5 xl:col-1" />
     </div>
     <!-- Menu ve icerik ekleme -->
-    <div class="col-12 xl:col-8">
+    <div class="col-12 lg:col-8">
       <div class="w-full flex flex-wrap">
         <div @click="selectCategory(category.id)"
-          class="col-4 xl:col-1 bg-primary text-center flex flex-column align-items-center justify-content-center  mb-2 mr-2 p-5 w-2 h-8rem cursor-pointer"
+          class="col-4 xl:col-1 bg-primary text-center flex flex-column align-items-center justify-content-center mb-2 mr-2 p-5 w-2 h-8rem cursor-pointer hover:bg-black-alpha-30"
           v-for="category in categoryList" :key="category.id">
           <img src="../assets/logo.png" width="50">
           {{ category.name }}
         </div>
       </div>
-      <div class="w-full">
-        <MenuDetail :category-list="categoryList" :categoryId="selectCategoryId"></MenuDetail>
+      <div class="col-12 p-0">
+        <MenuDetail :category-list="categoryList" :categoryId="selectCategoryId" @selectProduct="productList">
+        </MenuDetail>
       </div>
     </div>
     <!-- Tutar görme -->
-    <div class="col-5 xl:col-4">
-      <!--New Component -->
-      <PaymentDetail></PaymentDetail>
+    <div class="col-12 lg:col-4 mt-2">
+      <PaymentDetail :selectProduct="selectProduct" :tableInfo="tableInfo" ></PaymentDetail>
     </div>
   </div>
 </template>
@@ -33,6 +33,9 @@ import { onMounted, ref } from "vue";
 import { toastError } from "@/auxillary/toast";
 import MenuDetail from "@/components/MenuDetail.vue";
 import PaymentDetail from "@/components/PaymentDetail.vue";
+import router from "@/router/router";
+import dayjs from 'dayjs';
+
 export default {
   name: "TableDetail",
   components: { PaymentDetail, MenuDetail },
@@ -40,6 +43,14 @@ export default {
     const firestore = getFirestore(app);
     const categoryList = ref([]);
     const selectCategoryId = ref(0);
+    let selectProduct = ref([]);
+    let tableInfo = ref([]);
+    let tableNameAndNo = ref(router.currentRoute.value.params.name + " " + router.currentRoute.value.params.id);
+    const now = dayjs();
+    const hourFormat = now.format("HH:mm:ss");
+    tableInfo.value.push(
+      { tableName: tableNameAndNo.value, orderHour: hourFormat }
+    );
 
     const getCategoryList = async () => {
       const q = query(collection(firestore, "menu"));
@@ -56,15 +67,18 @@ export default {
       getCategoryList();
     });
 
+    const productList = (e) => {
+      selectProduct.value = e;
+    }
+
     const selectCategory = (categoryId) => {
       selectCategoryId.value = categoryId;
     }
 
-    return { categoryList, selectCategory, selectCategoryId };
+    return { categoryList, selectCategory, selectCategoryId, productList, selectProduct, tableInfo };
   }
 }
 
 </script>
-
 
 <style scoped></style>
