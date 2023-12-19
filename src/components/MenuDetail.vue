@@ -1,12 +1,15 @@
 <template>
   <!-- Ekle/Sil bar -->
-  <div class="w-full bg-yellow-500">
+  <div class="bg-yellow-500 col-12">
     <div class="flex justify-content-end">
       <PvInputText v-model="selectProduct" placeholder="Seçilen Ürün" disabled
-        class="col-4 xl:col-2 m-2 text-center text-900" />
-      <PvInputText v-model="productCount" placeholder="Adet Gir" type="number" class="col-4 xl:col-1 m-2" />
+        class="col-4 xl:col-2 my-2 text-center text-900" />
+      <PvInputText v-model="productCount" :disabled="!selectProduct" placeholder="Adet Gir" type="number"
+        class="col-2 xl:col-1 my-2 ml-1" />
       <PvButton rounded icon="pi pi-pencil" severity="help" class="m-2" v-tooltip.bottom="'Klavye Aç'"
         @click="openKeyboard" />
+      <PvButton rounded icon="pi pi-check" severity="success" class="m-2" v-tooltip.bottom="'Onayla'"
+        @click="successProduct" />
       <PvButton rounded icon="pi pi-plus" severity="success" class="m-2" v-tooltip.bottom="'Ekle'"
         @click="productCount++" />
       <PvButton rounded icon="pi pi-minus" severity="danger" class="m-2" v-tooltip.bottom="'Sil'"
@@ -14,13 +17,15 @@
     </div>
   </div>
   <div class="flex flex-wrap">
-    <keyboard v-model="productCount" @custom="custom" @input="changed" :layouts="[
-      '1234567890.{delete:backspace}'
-    ]" :maxlength="16"></keyboard>
+    <PvOverlayPanel ref="op">
+      <keyboard v-model="productCount" @input="changed" :layouts="[
+        '1234567890{delete:backspace}'
+      ]" :maxlength="16"></keyboard>
+    </PvOverlayPanel>
     <div @click="addProduct(menu.name, menu.id)" v-tooltip.bottom="'Ekle'"
-      class="col-2 xl:col-1 bg-red-300 text-center flex justify-content-center  mb-2 mr-2 mt-2 p-7  cursor-pointer"
+      class="col-2 h-7rem xl:col-1 bg-red-300 text-center flex justify-content-center mb-2 mr-2 mt-2 cursor-pointer hover:bg-black-alpha-30"
       v-for="menu in selectCategoryMenuList" :key="menu.id">
-      {{ menu.name }}
+      <span class="flex align-items-center">{{ menu.name }}</span>
     </div>
   </div>
 </template>
@@ -28,8 +33,10 @@
 <script>
 import { getFirestore, query, collection, getDocs } from "firebase/firestore";
 import { app } from "@/firebase/firebase";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch} from "vue";
 import keyboard from 'vue-keyboard';
+import dayjs from 'dayjs';
+import { uid } from 'uid';
 
 export default {
   name: "MenuDetail",
@@ -44,13 +51,17 @@ export default {
       type: Number
     }
   },
-  setup(props) {
+  emits:["selectProduct"],
+  setup(props, { emit }) {
     const firestore = getFirestore(app);
     const menuList = ref([]);
     const selectCategoryMenuList = ref();
     let selectProduct = ref(null);
     let productCount = ref(0);
     let productIdRef = ref();
+    const op = ref();
+    let productInfoList = ref([]);
+
     const getMenuList = async () => {
       const q = query(collection(firestore, "product"));
       await getDocs(q).then((snapshot) => {
@@ -58,6 +69,9 @@ export default {
           menuList.value.push(payload.data());
         });
       });
+    }
+    const changed = (value) => {
+      productCount.value = value;
     }
 
     const selectCategoryMenu = () => {
@@ -84,14 +98,29 @@ export default {
       selectProduct.value = productName;
       if (selectProduct.value)
         productCount.value++
+      const now = dayjs();
+      const hourFormat = now.format("DD-MM-YYYY HH:mm:ss");
+      let productInfo =
+      {
+        id: productId,
+        name: productName,
+        count: productCount.value,
+        orderTime: hourFormat,
+        uid: uid()
+      };
+      productInfoList.value.push(productInfo);
+      emit("selectProduct", productInfoList.value);
     };
 
-    const openKeyboard = () => {
-      var inputElement = document.activeElement;
-      inputElement.focus();
+    const successProduct = () => {
+      console.log("Ekleme");
     }
 
-    return { selectCategoryMenuList, addProduct, selectProduct, productCount, openKeyboard }
+    const openKeyboard = (event) => {
+      op.value.toggle(event);
+    }
+
+    return { selectCategoryMenuList, addProduct, selectProduct, productCount, openKeyboard, op, changed, successProduct }
   }
 }
 </script>

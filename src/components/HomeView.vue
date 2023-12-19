@@ -65,7 +65,7 @@ export default {
 
     const selectTable = (tableNo, tableName) => {
       console.log(tableNo);
-      router.push({ name: "TableDetail", params: { name: tableName, id: tableNo } });
+      router.push({ name: "TableView", params: { name: tableName, id: tableNo } });
     }
 
     onMounted(() => {

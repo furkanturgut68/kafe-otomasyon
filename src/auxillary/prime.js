@@ -10,6 +10,10 @@ import Button from "primevue/button";
 import Toast from "primevue/toast";
 import ToastService from "primevue/toastservice";
 import Tooltip from "primevue/tooltip";
+import OverlayPanel from 'primevue/overlaypanel';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import ContextMenu from 'primevue/contextmenu';
 
 export const prime = (app) => {
   app.use(PrimeVue);
@@ -17,6 +21,10 @@ export const prime = (app) => {
   app.component("PvDropdown", Dropdown);
   app.component("PvButton", Button);
   app.component("PvToast", Toast);
+  app.component("PvOverlayPanel", OverlayPanel);
+  app.component("PvDataTable", DataTable);
+  app.component("PvColumn", Column);
+  app.component("PvContextMenu", ContextMenu);
 
   app.directive("tooltip", Tooltip);
 
