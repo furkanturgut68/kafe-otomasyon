@@ -7,16 +7,17 @@
     <span class="text-xl font-bold text-center col-12">Ürünler</span>
 
     <div class="col-12">
-      <PvDataTable :value="selectProduct" class="col-12" scrollable scrollHeight="580px" dataKey="uid" v-model:selection="selectedRowProduct">
+      <PvDataTable :value="selectProduct" class="col-12" scrollable scrollHeight="580px" dataKey="Uid" v-model:selection="selectedRowProduct">
         <PvColumn selectionMode="multiple"></PvColumn>
-        <PvColumn field="name" header="Ürün"></PvColumn>
-        <PvColumn field="count" header="Adet"></PvColumn>
-        <PvColumn field="orderTime" header="Tarih"></PvColumn>
+        <PvColumn field="Name" header="Ürün"></PvColumn>
+        <PvColumn field="Count" header="Adet"></PvColumn>
+        <PvColumn field="Price" header="Fiyat"></PvColumn>
+        <PvColumn field="OrderTime" header="Tarih"></PvColumn>
       </PvDataTable>
     </div>
 
     <div class="col-12 flex align-items-center ">
-      <span class="col-6 font-bold">TUTAR</span>
+      <span class="col-6 font-bold">TUTAR =  {{totalPayment}} TL</span>
       <PvButton label="Hesabı Al" severity="success" class="col-6" />
     </div>
 
@@ -26,7 +27,7 @@
 </template>
 
 <script>
-import {ref} from "vue";
+import {computed, ref} from "vue";
 
 export default {
   name: "PaymentDetail",
@@ -39,10 +40,10 @@ export default {
       type: Array
     }
   },
-  setup(props) {
+  emits:["deleteProduct"],
+  setup(props, {emit}) {
     const menu = ref();
     const selectedRowProduct = ref([]);
-    const updateList = ref();
     const menuList = ref([
       {label:"Sil", icon: "pi pi-trash", command:() => { deleteProduct() }}
     ]);
@@ -51,14 +52,23 @@ export default {
           menu.value.show(event);
     }
 
+    const totalPayment = computed(() => {
+      let total = 0;
+      for (let i= 0; i < props.selectProduct.length; i++) {
+        total += props.selectProduct[i].Price * props.selectProduct[i].Count;
+      }
+      return total;
+    });
+
     const deleteProduct = () => {
-      console.log(selectedRowProduct.value)
-     updateList.value = props.selectProduct.filter((item) => {
-          return selectedRowProduct.value.some(item2 => item2 !== item)
+      const filteredProducts = props.selectProduct.filter((item) => {
+        return item.Uid !== selectedRowProduct.value[0].Uid
       });
-      console.log("Sonuc ",updateList.value);
+
+      emit("deleteProduct", filteredProducts);
+      selectedRowProduct.value = [];
     }
-    return {menuList,menu,contextMenu, selectedRowProduct}
+    return {menuList,menu,contextMenu, selectedRowProduct,totalPayment}
   }
 }
 

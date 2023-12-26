@@ -1,7 +1,7 @@
 <template>
   <div class="grid col-12 ">
     <div class="col-12 bg-primary w-screen h-4rem flex justify-content-between xl:gap-4 xl:justify-content-start ">
-      <PvButton label="Kaydet Çık" severity="success" icon="pi pi-check" class="col-5 xl:col-1" />
+      <PvButton label="Kaydet Çık" severity="success" icon="pi pi-check" class="col-5 xl:col-1" @click="saveAndExit"/>
       <PvButton label="Kaydetmeden Çık" severity="danger" icon="pi pi-times" class="col-5 xl:col-1" />
     </div>
     <!-- Menu ve icerik ekleme -->
@@ -15,19 +15,19 @@
         </div>
       </div>
       <div class="col-12 p-0">
-        <MenuDetail :category-list="categoryList" :categoryId="selectCategoryId" @selectProduct="productList">
+        <MenuDetail :category-list="categoryList" :categoryId="selectCategoryId" @selectProduct="productList" :deleteProduct="selectProduct">
         </MenuDetail>
       </div>
     </div>
     <!-- Tutar görme -->
     <div class="col-12 lg:col-4 mt-2">
-      <PaymentDetail :selectProduct="selectProduct" :tableInfo="tableInfo" ></PaymentDetail>
+      <PaymentDetail :selectProduct="selectProduct" :tableInfo="tableInfo" @delete-product="deleteProduct" ></PaymentDetail>
     </div>
   </div>
 </template>
 
 <script>
-import { getFirestore, query, collection, getDocs } from "firebase/firestore";
+import { getFirestore, query, collection, getDocs, addDoc } from "firebase/firestore";
 import { app } from "@/firebase/firebase";
 import { onMounted, ref } from "vue";
 import { toastError } from "@/auxillary/toast";
@@ -71,11 +71,23 @@ export default {
       selectProduct.value = e;
     }
 
+    const deleteProduct = (e) => {
+      console.log("DeleteProduct")
+      selectProduct.value = e;
+    }
+
     const selectCategory = (categoryId) => {
       selectCategoryId.value = categoryId;
     }
 
-    return { categoryList, selectCategory, selectCategoryId, productList, selectProduct, tableInfo };
+    const saveAndExit = async () => {
+      let productInfo = {
+        product: selectProduct.value
+      }
+      await addDoc(collection(firestore, "orders"), productInfo);
+    }
+
+    return { categoryList, selectCategory, selectCategoryId, selectProduct, productList, tableInfo, deleteProduct, saveAndExit };
   }
 }
 
